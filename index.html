@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nombre Mystère</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+
+</head>
+<body>
+    <div id="game-container">
+        <h1 class="mx-auto text-center">Jeu du Nombre Mystère</h1>
+        <hr>
+        <div class="m-3 me-auto pe-3">
+            <h2>Régle du jeu</h2>
+            <p style="text-align: justify;">
+                Le but du jeu est de trouver le nombre mystère en saissant le moins de proposition possible.
+                <br>
+                Commence par saisir ton prénom ou un pseudo de ton choix, selectionnes un niveau de difficulté puis cliques sur le bouton "commencer le jeu".
+            </p>
+        </div>
+        <hr>
+        <form class="d-flex flex-column" id="game-form">
+            <div class="ms-3 me-auto pe-3">
+                <label for="playerName">Quel est ton nom :</label>
+                <input type="text" id="playerName" name="playerName" required>
+            </div>
+            <label class="ms-3 me-auto pe-3">Choisis un niveau de difficulté:</label>
+            <div class="ms-3 me-auto pe-3">
+                <input type="radio" id="difficulty" name="difficulty" value="1" checked>
+                <label for="easy">de 1 à 10</label>
+            </div>
+            <div class="ms-3 me-auto pe-3">
+                <input type="radio" id="difficulty" name="difficulty" value="2">
+                <label for="medium">de 1 à 100</label>
+            </div>
+            <div class="ms-3 me-auto pe-3">
+                <input type="radio" id="difficulty" name="difficulty" value="3">
+                <label for="hard">de 1 à 1000</label>
+            </div>
+            <button class="btn btn-primary ms-3 me-auto" type="button" onclick="startGame()">Commencer le jeu</button>
+        </form>
+    </div>
+
+    <script>
+        var playerName;
+        var attempts = 0;
+        var maxNumber;
+        var secretNumber;
+        var guessedNumbers = [];
+
+        // Fonction pour commencer le jeu
+        function startGame() {
+            // Récupérer les valeurs du formulaire
+            playerName = document.getElementById("playerName").value;
+            var difficultyElements = document.querySelector('input[name=difficulty]:checked').value;
+
+            // Trouver la difficulté sélectionnée
+            var selectedDifficulty = parseInt(difficultyElements);
+
+            // Vérifier la validité de la difficulté
+            if (isNaN(selectedDifficulty) || selectedDifficulty < 1 || selectedDifficulty > 3) {
+                alert("Choix de difficulté non valide. Le jeu va se fermer.");
+            } else {
+                // Définir la plage de nombres en fonction de la difficulté
+                switch (selectedDifficulty) {
+                    case 1:
+                        maxNumber = 10;
+                        break;
+                    case 2:
+                        maxNumber = 100;
+                        break;
+                    case 3:
+                        maxNumber = 1000;
+                        break;
+                    default:
+                        break;
+                }
+
+                // Générer le nombre mystère
+                secretNumber = Math.floor(Math.random() * maxNumber) + 1;
+
+                // Afficher le jeu
+                displayGame();
+            }
+        }
+
+        var gameContainer = document.getElementById("game-container");
+        var contenuHtmlActuel;
+        var ajoutBaliseHtml;
+        var ajoutBaliseHtml_2;
+        var propositionEffectuée;
+        // Afficher le jeu
+        function displayGame() {
+            gameContainer.innerHTML = `
+                <div class="ms-3 me-auto pe-3">
+                    <h2>Bon courage, ${playerName}!<br>Trouve le nombre mystère, il peut être de 1 à ${maxNumber}</h2>
+                    <form id="guess-form">
+                        <label for="userGuess">Ta proposition:</label>
+                        <input type="number" id="userGuess" name="userGuess" min="1" max="${maxNumber}" required>
+                        <button type="button" onclick="makeGuess()">Proposer</button>
+                    </form>
+                </div>
+            `;
+            contenuHtmlActuel = gameContainer.innerHTML;
+        }
+
+        // Fonction pour faire une proposition
+        function makeGuess() {
+            var userGuess = parseInt(document.getElementById("userGuess").value);
+
+            // Vérifier la validité de la saisie
+            if (isNaN(userGuess) || userGuess < 1 || userGuess > maxNumber) {
+                alert("Saisie non valide. Réessaie.");
+            } else {
+                // Incrémenter le nombre de tentatives
+                attempts++;
+
+                // Ajouter la réponse à la liste des réponses déjà effectuées
+                guessedNumbers.push(userGuess);
+
+                // Vérifier la devinette
+                if (userGuess < secretNumber) {
+                    alert("Trop bas! Essaie encore.");
+                    gameContainer.innerHTML = contenuHtmlActuel + displayResults();
+                } else if (userGuess > secretNumber) {
+                    alert("Trop haut! Essaie encore.");
+                    gameContainer.innerHTML = contenuHtmlActuel + displayResults();
+                } else {
+                    // Le joueur a deviné correctement
+                    var messageGagnant = "<h2 class='m-3'>Bravo, " + playerName + "!</h2><h3 class='m-3'>Tu as deviné le nombre mystère en " + attempts + " tentatives.</h3>";
+                    
+                    ajoutBaliseHtml = `
+                        <p class="m-3" >` + messageGagnant + `</p>
+                        <img class="m-3" src="img/gagne.gif" alt="J'ai gagné">
+                        <br>
+                        `+ displayResults(); +`
+                        <br>
+                    `;
+                    ajoutBaliseHtml_2 = `
+                        <button class="btn btn-primary ms-3 me-auto" type="button" onclick="ouvrirIndex()">Nouvelle partie</button>
+                    `;
+                    gameContainer.innerHTML = ajoutBaliseHtml + ajoutBaliseHtml_2;
+
+                }
+            }
+        }
+
+        // Afficher les résultats
+        function displayResults() {
+            propositionEffectuée = "<p class='m-3'>Réponses déjà effectuées : " + guessedNumbers.join(", ") + "</p>";
+            return propositionEffectuée;
+        }
+
+        function ouvrirIndex() {
+            window.location.href = "index.html";
+        }
+    </script>
+    
+</body>
+</html>
